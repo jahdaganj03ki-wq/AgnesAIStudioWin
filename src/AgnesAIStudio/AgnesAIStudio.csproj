@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AgnesAIStudio</RootNamespace>
+    <AssemblyName>AgnesAIStudio</AssemblyName>
+    <AssemblyTitle>AgnesAI Studio</AssemblyTitle>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <PublishSingleFile>false</PublishSingleFile>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

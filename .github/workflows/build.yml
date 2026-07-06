@@ -1,0 +1,57 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish (self-contained, win-x64)
+        run: dotnet publish src/AgnesAIStudio/AgnesAIStudio.csproj -c Release -r win-x64 --self-contained -o publish
+        shell: pwsh
+
+      - name: Download WebView2 Evergreen bootstrapper
+        run: |
+          Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2086861" -OutFile "publish/MicrosoftEdgeWebview2Setup.exe"
+        shell: pwsh
+
+      - name: Install NSIS
+        run: choco install nsis -y
+        shell: pwsh
+
+      - name: Build NSIS installer
+        run: makensis installer/installer.nsi -DSOURCE="publish"
+        shell: pwsh
+
+      - name: Verify artifact
+        run: Get-Item AgnesAIStudio-Setup.exe | Select-Object Name, Length
+        shell: pwsh
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgnesAIStudio-Setup
+          path: AgnesAIStudio-Setup.exe
+          if-no-files-found: error
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        run: gh release upload "${{ github.event.release.tag_name }}" AgnesAIStudio-Setup.exe --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh

@@ -1,0 +1,13 @@
+# Build outputs
+publish/
+bin/
+obj/
+*.user
+AgnesAIStudio-Setup.exe
+
+# Android APKs (not part of the build)
+APK/
+
+# OS
+Thumbs.db
+.DS_Store
