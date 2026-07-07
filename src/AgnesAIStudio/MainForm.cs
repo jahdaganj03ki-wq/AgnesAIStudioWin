@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -42,7 +43,7 @@ namespace AgnesAIStudio
                 if (!await TryInstallWebView2Async())
                 {
                     MessageBox.Show(
-                        "Die Edge WebView2 Runtime wird für diese App benötigt, konnte aber nicht automatisch installiert werden.\n\n" +
+                        "Die Edge WebView2 Runtime wird für diese App benötigt, konnte aber nicht installiert werden.\n\n" +
                         "Fehler: " + ex.Message + "\n\n" +
                         "Bitte installiere die Runtime manuell:\n" +
                         "https://developer.microsoft.com/microsoft-edge/webview2/",
@@ -95,15 +96,14 @@ namespace AgnesAIStudio
 
             try
             {
-                var dest = Path.Combine(
-                    Path.GetTempPath(),
-                    "AgnesAIStudio", "MicrosoftEdgeWebview2Setup.exe");
-                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                var tempDir = Path.Combine(Path.GetTempPath(), "AgnesAIStudio");
+                Directory.CreateDirectory(tempDir);
+                var dest = Path.Combine(tempDir, "MicrosoftEdgeWebview2Setup.exe");
 
-                using var wc = new System.Net.WebClient();
+                using var wc = new WebClient();
                 wc.DownloadFile(_bootstrapper, dest);
 
-                var psi = new System.Diagnostics.ProcessStartInfo
+                var psi = new ProcessStartInfo
                 {
                     FileName = dest,
                     Arguments = "/silent /install",
@@ -111,99 +111,12 @@ namespace AgnesAIStudio
                     Verb = "runas",
                     CreateNoWindow = true,
                 };
-                using var p = System.Diagnostics.Process.Start(psi);
+                using var p = Process.Start(psi);
                 if (p != null) await Task.Run(() => p.WaitForExit(15 * 60 * 1000));
 
                 Application.DoEvents();
                 var testEnv = await CoreWebView2Environment.CreateAsync(null, string.Empty);
                 return testEnv != null;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Automatische Installation fehlgeschlagen:\n" + ex.Message,
-                    "AgnesAI Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-        }
-            catch (Exception ex)
-            {
-                if (!TryInstallWebView2(out env))
-                {
-                    MessageBox.Show(
-                        "Die Edge WebView2 Runtime wird für diese App benötigt, konnte aber nicht automatisch installiert werden.\n\n" +
-                        "Fehler: " + ex.Message + "\n\n" +
-                        "Bitte installiere die Runtime manuell:\n" +
-                        "https://developer.microsoft.com/microsoft-edge/webview2/",
-                        "AgnesAI Studio - WebView2 fehlt",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                try
-                {
-                    await _webView.EnsureCoreWebView2Async(env);
-                }
-                catch (Exception ex2)
-                {
-                    MessageBox.Show(
-                        "WebView2 lädt trotz Installation nicht korrekt.\n\n" + ex2.Message + "\n\n" +
-                        "Bitte starte die App neu.",
-                        "AgnesAI Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-            }
-
-            _backend = new Backend(_webView);
-
-            _webView.CoreWebView2.WebMessageReceived += (s, args) =>
-            {
-                var msg = args.TryGetWebMessageAsString();
-                if (!string.IsNullOrEmpty(msg) && _backend != null)
-                    _ = _backend.HandleMessage(msg);
-            };
-
-            var htmlPath = Path.Combine(AppContext.BaseDirectory, "assets", "index.html");
-            if (File.Exists(htmlPath))
-                _webView.CoreWebView2.Navigate(new Uri(htmlPath).AbsoluteUri);
-            else
-                _webView.CoreWebView2.Navigate("about:blank");
-        }
-
-        private bool TryInstallWebView2(out CoreWebView2Environment? env)
-        {
-            env = null;
-            var result = MessageBox.Show(
-                "Die Edge WebView2 Runtime ist nicht installiert.\n\n" +
-                "Ohne diese Komponente kann das Fenster nicht angezeigt werden.\n\n" +
-                "Jetzt Runtime herunterladen und installieren?",
-                "AgnesAI Studio - WebView2 benötigt",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (result != DialogResult.Yes) return false;
-
-            try
-            {
-                var dest = Path.Combine(
-                    Path.GetTempPath(),
-                    "AgnesAIStudio", "MicrosoftEdgeWebview2Setup.exe");
-                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
-
-                using var wc = new System.Net.WebClient();
-                wc.DownloadFile(_bootstrapper, dest);
-
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = dest,
-                    Arguments = "/silent /install",
-                    UseShellExecute = true,
-                    Verb = "runas",
-                    CreateNoWindow = true,
-                };
-                using var p = System.Diagnostics.Process.Start(psi);
-                if (p != null) p.WaitForExit(15 * 60 * 1000);
-
-                Application.DoEvents();
-                return CoreWebView2Environment.CreateAsync(null, string.Empty).GetAwaiter().GetResult() != null;
             }
             catch (Exception ex)
             {
