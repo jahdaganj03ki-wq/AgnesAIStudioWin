@@ -30,6 +30,19 @@ jobs:
           Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2086861" -OutFile "publish/MicrosoftEdgeWebview2Setup.exe"
         shell: pwsh
 
+      - name: Stage installer source
+        run: |
+          New-Item -ItemType Directory -Force -Path installer/publish | Out-Null
+          Copy-Item -Recurse -Force publish/* installer/publish/
+        shell: pwsh
+
+      - name: Build NSIS installer
+        run: |
+          $exe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path $exe)) { $exe = "C:\ProgramData\chocolatey\lib\nsis\makensis.exe" }
+          & $exe installer/installer.nsi
+        shell: pwsh
+
       - name: Download & unpack WebView2 Fixed Runtime
         run: |
           $ver = "1.0.2792.45"
