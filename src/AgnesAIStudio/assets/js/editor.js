@@ -38,8 +38,12 @@ Modes.editor = (function () {
         el('div', { class: 'bubble' }, [imgs, it.text ? document.createTextNode(it.text) : null].filter(Boolean)),
       ]);
     }
-    const media = it.src ? el('div', { class: 'media', style: 'padding:6px;' }, [el('img', { src: it.src, style: 'max-width:100%;border-radius:8px;' })])
-      : el('div', { class: 'media' }, [el('div', { class: 'spinner' })]]);
+    let media;
+    if (it.src) {
+      media = el('div', { class: 'media', style: 'padding:6px;' }, [el('img', { src: it.src, style: 'max-width:100%;border-radius:8px;' })]);
+    } else {
+      media = el('div', { class: 'media' }, [el('div', { class: 'spinner' })]);
+    }
     const card = el('div', { class: 'gen-card', style: 'max-width:520px;' }, [
       media,
       el('div', { class: 'actions' }, [
