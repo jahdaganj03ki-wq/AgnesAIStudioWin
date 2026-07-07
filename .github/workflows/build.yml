@@ -30,6 +30,16 @@ jobs:
           Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2086861" -OutFile "publish/MicrosoftEdgeWebview2Setup.exe"
         shell: pwsh
 
+      - name: Download & unpack WebView2 Fixed Runtime
+        run: |
+          $ver = "1.0.2792.45"
+          $cab = "publish/Microsoft.WebView2.FixedVersionRuntime.$ver.x64.cab"
+          Invoke-WebRequest -Uri "https://msedgedl.blob.core.windows.net/webview/$ver/Microsoft.WebView2.FixedVersionRuntime.$ver.x64.cab" -OutFile $cab
+          New-Item -ItemType Directory -Force -Path publish/WebView2Runtime | Out-Null
+          expand.exe $cab -F:* publish/WebView2Runtime
+          Remove-Item $cab
+        shell: pwsh
+
       - name: Install NSIS
         run: choco install nsis -y
         shell: pwsh

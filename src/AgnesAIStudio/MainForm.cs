@@ -32,14 +32,40 @@ namespace AgnesAIStudio
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "AgnesAIStudio", "WebView2");
 
+            CoreWebView2Environment? env = null;
             try
             {
-                var env = await CoreWebView2Environment.CreateAsync(null, userData);
+                var runtimeDir = FindBundledRuntime();
+                env = runtimeDir != null
+                    ? await CoreWebView2Environment.CreateAsync(runtimeDir, userData)
+                    : await CoreWebView2Environment.CreateAsync(null, userData);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    env = await CoreWebView2Environment.CreateAsync(null, userData);
+                }
+                catch
+                {
+                    MessageBox.Show(
+                        "WebView2 konnte nicht initialisiert werden.\n\n" + ex.Message +
+                        "\n\nDie App enthält eigentlich eine eigene WebView2-Runtime. Falls diese fehlt, " +
+                        "installiere die WebView2 Runtime manuell oder starte die App neu.",
+                        "AgnesAI Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            try
+            {
                 await _webView.EnsureCoreWebView2Async(env);
             }
-            catch
+            catch (Exception ex)
             {
-                await _webView.EnsureCoreWebView2Async();
+                MessageBox.Show("WebView2 konnte nicht geladen werden:\n" + ex.Message,
+                    "AgnesAI Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             _backend = new Backend(_webView);
@@ -56,6 +82,19 @@ namespace AgnesAIStudio
                 _webView.CoreWebView2.Navigate(new Uri(htmlPath).AbsoluteUri);
             else
                 _webView.CoreWebView2.Navigate("about:blank");
+        }
+
+        private static string? FindBundledRuntime()
+        {
+            try
+            {
+                var root = Path.Combine(AppContext.BaseDirectory, "WebView2Runtime");
+                if (!Directory.Exists(root)) return null;
+                foreach (var f in Directory.GetFiles(root, "msedgewebview2.exe", SearchOption.AllDirectories))
+                    return Path.GetDirectoryName(f);
+            }
+            catch { }
+            return null;
         }
     }
 }

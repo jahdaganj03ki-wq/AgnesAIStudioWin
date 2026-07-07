@@ -22,6 +22,8 @@ const App = {
 };
 
 window.addEventListener('DOMContentLoaded', () => {
+  const boot = document.getElementById('boot');
+  if (boot) boot.remove();
   State.load();
   document.body.dataset.theme = State.settings.theme;
 

@@ -153,6 +153,7 @@ Modes.bilder = (function () {
         UI.renderSidebar();
       },
       onError: (m) => {
+        busy = false;
         card.querySelector('.media').innerHTML = '<div style="padding:20px;color:#cf1322">Fehler ' + (m.status || '') + '</div>';
         UI.toast('Bild-Fehler: ' + (m.status || ''), true);
       },

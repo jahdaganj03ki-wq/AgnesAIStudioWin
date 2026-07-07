@@ -141,6 +141,7 @@ Modes.editor = (function () {
         aiNode.replaceWith(fresh);
       },
       onError: (m) => {
+        busy = false;
         aiItem.error = true; State.save();
         const fresh = el('div', { class: 'msg ai' }, [el('div', { class: 'avatar ai', text: 'A' }),
           el('div', { class: 'bubble', text: '⚠️ Fehler ' + (m.status || '') })]); aiNode.replaceWith(fresh);

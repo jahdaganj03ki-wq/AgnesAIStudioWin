@@ -61,11 +61,15 @@ Modes.chat = (function () {
     }});
 
     const attachBtn = el('button', { class: 'icon-btn', title: 'Bild anhängen', text: '📎', onclick: () => fileInput.click() });
+    const urlBtn = el('button', { class: 'icon-btn', title: 'Bild-URL einfügen', text: '🌐', onclick: () => {
+      const u = prompt('Öffentliche Bild-URL:', 'https://');
+      if (u) { attachments.push({ name: 'url', dataUri: u, isUrl: true }); renderThumbs(thumbs); }
+    } });
     const sendBtn = el('button', { class: 'send-btn', title: 'Senden', text: '➤', onclick: () => send(ta) });
 
     box.appendChild(thumbs);
     box.appendChild(el('div', { class: 'composer-row' }, [
-      attachBtn, fileInput,
+      attachBtn, urlBtn, fileInput,
       ta,
       el('div', { class: 'composer-actions' }, [sendBtn]),
     ]));
@@ -138,7 +142,14 @@ Modes.chat = (function () {
         State.save();
       },
       onError: (m) => {
-        aiMsg.text = '⚠️ Fehler ' + (m.status || '') + ': ' + m.body;
+        busy = false;
+        const body = (m.body || '');
+        if (/image input|does not support/i.test(body)) {
+          aiMsg.text = '⚠️ Bild-Eingabe wird von ' + State.settings.chatModel + ' (Free) nicht unterstützt. ' +
+            'Nutze eine öffentliche Bild-URL (🌐) oder die Modi Bilder/Editor.';
+        } else {
+          aiMsg.text = '⚠️ Fehler ' + (m.status || '') + ': ' + body;
+        }
         aiBubble.innerHTML = escapeHtml(aiMsg.text);
         UI.toast('Chat-Fehler: ' + (m.status || ''), true);
         State.save();
