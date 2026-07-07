@@ -30,29 +30,6 @@ jobs:
           Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2086861" -OutFile "publish/MicrosoftEdgeWebview2Setup.exe"
         shell: pwsh
 
-      - name: Stage installer source
-        run: |
-          New-Item -ItemType Directory -Force -Path installer/publish | Out-Null
-          Copy-Item -Recurse -Force publish/* installer/publish/
-        shell: pwsh
-
-      - name: Build NSIS installer
-        run: |
-          $exe = "C:\Program Files (x86)\NSIS\makensis.exe"
-          if (-not (Test-Path $exe)) { $exe = "C:\ProgramData\chocolatey\lib\nsis\makensis.exe" }
-          & $exe installer/installer.nsi
-        shell: pwsh
-
-      - name: Download & unpack WebView2 Fixed Runtime
-        run: |
-          $ver = "1.0.2792.45"
-          $cab = "publish/Microsoft.WebView2.FixedVersionRuntime.$ver.x64.cab"
-          Invoke-WebRequest -Uri "https://msedgedl.blob.core.windows.net/webview/$ver/Microsoft.WebView2.FixedVersionRuntime.$ver.x64.cab" -OutFile $cab
-          New-Item -ItemType Directory -Force -Path publish/WebView2Runtime | Out-Null
-          expand.exe $cab -F:* publish/WebView2Runtime
-          Remove-Item $cab
-        shell: pwsh
-
       - name: Install NSIS
         run: choco install nsis -y
         shell: pwsh
@@ -65,9 +42,17 @@ jobs:
 
       - name: Build NSIS installer
         run: |
-          $exe = "C:\Program Files (x86)\NSIS\makensis.exe"
-          if (-not (Test-Path $exe)) { $exe = "C:\ProgramData\chocolatey\lib\nsis\makensis.exe" }
-          & $exe installer/installer.nsi
+          $nsis = Get-Command makensis -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+          if (-not $nsis) {
+            $nsis = Join-Path $env:ProgramData "chocolatey\bin\makensis.exe"
+          }
+          if (-not $nsis -or -not (Test-Path $nsis)) {
+            $nsis = "C:\Program Files (x86)\NSIS\makensis.exe"
+          }
+          if (-not (Test-Path $nsis)) {
+            throw "makensis not found (checked PATH and common install paths)."
+          }
+          & $nsis installer/installer.nsi
         shell: pwsh
 
       - name: Verify artifact
