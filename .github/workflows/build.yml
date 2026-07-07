@@ -48,19 +48,19 @@ jobs:
         shell: pwsh
 
       - name: Verify artifact
-        run: Get-Item AgnesAIStudio-Setup.exe | Select-Object Name, Length
+        run: Get-Item installer/AgnesAIStudio-Setup.exe | Select-Object Name, Length
         shell: pwsh
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: AgnesAIStudio-Setup
-          path: AgnesAIStudio-Setup.exe
+          path: installer/AgnesAIStudio-Setup.exe
           if-no-files-found: error
 
       - name: Upload to Release
         if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" AgnesAIStudio-Setup.exe --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" installer/AgnesAIStudio-Setup.exe --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
