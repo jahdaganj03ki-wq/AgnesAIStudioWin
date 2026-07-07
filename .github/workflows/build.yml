@@ -38,7 +38,7 @@ jobs:
         run: |
           $exe = "C:\Program Files (x86)\NSIS\makensis.exe"
           if (-not (Test-Path $exe)) { $exe = "C:\ProgramData\chocolatey\lib\nsis\makensis.exe" }
-          & $exe installer/installer.nsi -DSOURCE="publish"
+          & $exe installer/installer.nsi "-DSOURCE=$PWD/publish"
         shell: pwsh
 
       - name: Verify artifact
