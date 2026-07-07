@@ -26,11 +26,11 @@ Var WebView2Installed
 
 Function EnsureWebView2
   StrCpy $WebView2Installed "0"
-  ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-9686A842D87C}" "pv" 2>/dev/null
+  ReadRegStr $0 HKLM "SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-9686A842D87C}" "pv"
   ${If} $0 != ""
     StrCpy $WebView2Installed "1"
   ${EndIf}
-  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-9686A842D87C}" "pv" 2>/dev/null
+  ReadRegStr $0 HKLM "SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-9686A842D87C}" "pv"
   ${If} $0 != ""
     StrCpy $WebView2Installed "1"
   ${EndIf}
